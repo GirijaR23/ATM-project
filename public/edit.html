@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit User Account</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <h1>Edit User Account</h1>
+            <div class="nav-links">
+                <a href="/read" class="button secondary">Back to List</a>
+            </div>
+        </div>
+
+        <div class="card form-card">
+            <form action="/update" method="post" class="form-grid">
+                <input type="hidden" name="id" id="id">
+               
+                <label for="accnum">Account / Card Number</label>
+                <input type="number" id="accnum" name="accnum" placeholder="1234 1234 1234 1234" required>
+
+                <label for="pinnum">PIN Number</label>
+                <input type="password" id="pinnum" name="pinnum" placeholder="1234" required>
+
+                <label for="accbls">Account Balance</label>
+                <input type="number" id="accbls" name="accbls" placeholder="₹000000" required>
+
+                <div class="actions">
+                    <button type="submit" class="button primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        console.log(id);
+        
+        async function data(){
+            const response = await fetch(`/read/${id}`);
+            const data = await response.json();
+            console.log(data);
+            document.getElementById('id').value = data._id;
+            document.getElementById('accnum').value = data.accnum;
+            document.getElementById('pinnum').value = data.pinnum;
+            document.getElementById('accbls').value = data.accbls;
+        }
+        data();
+
+    </script>
+
+</body>
+</html>

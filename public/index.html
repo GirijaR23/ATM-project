@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank of Tamil Nadu | ATM Kiosk Simulation</title>
+    <meta name="description" content="Full-featured interactive Automated Teller Machine (ATM) banking simulator with Cash Withdrawal, Deposit, Transfer, Mini Statement, PIN Change and Multi-Language Support.">
+    <link rel="stylesheet" href="/css/atm-theme.css">
+</head>
+<body>
+
+    <!-- 🚀 Top Control Bar -->
+    <header class="top-quick-bar">
+        <div class="bank-security-tag" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #38bdf8; font-weight: 600;">
+            <span>🔒 SECURE ATM TERMINAL</span>
+            <span style="color: #64748b; font-weight: normal; font-size: 12px;">• 256-Bit SSL Encrypted Session</span>
+        </div>
+
+        <div class="quick-tools">
+            <!-- Language Switcher -->
+            <div class="lang-selector">
+                <button class="lang-btn active" data-lang="en" onclick="atm.selectLang('en')">EN</button>
+                <button class="lang-btn" data-lang="ta" onclick="atm.selectLang('ta')">தமிழ்</button>
+                <button class="lang-btn" data-lang="hi" onclick="atm.selectLang('hi')">हिंदी</button>
+            </div>
+
+            <!-- Sound Effects Toggle -->
+            <button id="sound-toggle-btn" class="tool-icon-btn" title="Toggle Sound Effects">🔊</button>
+
+            <!-- Admin Portal Link -->
+            <a href="/admin" class="demo-card-btn" style="background: #0284c7; color: white; border: none; text-decoration: none;">
+                🛡️ Admin Portal
+            </a>
+        </div>
+    </header>
+
+    <!-- 🏧 Realistic ATM Kiosk Hardware Console -->
+    <main class="atm-machine" id="atm-kiosk-main">
+        
+        <!-- Top Bank Branding Canopy -->
+        <div class="atm-top-brand">
+            <div class="bank-logo-group">
+                <div class="bank-emblem">🏦</div>
+                <div class="bank-title-text">
+                    <h1 data-i18n="bankName">BANK OF TAMIL NADU</h1>
+                    <p data-i18n="tagline">24x7 Automated Teller Machine</p>
+                </div>
+            </div>
+            <div class="kiosk-status-badge">
+                <div class="led-indicator"></div>
+                <div class="status-info">
+                    <div>ATM ID: <strong>ATM-TN-CHN-008</strong></div>
+                    <div id="kiosk-time">Loading clock...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Console Layout: Screen + Hardware Slots -->
+        <div class="atm-main-grid">
+            
+            <!-- 🖥️ ATM Screen & Physical Side Function Buttons -->
+            <div class="screen-housing">
+                
+                <!-- Left Function Keys (F1 - F4) -->
+                <div class="side-buttons-col">
+                    <button class="f-key-btn" data-fkey="F1">F1</button>
+                    <button class="f-key-btn" data-fkey="F2">F2</button>
+                    <button class="f-key-btn" data-fkey="F3">F3</button>
+                    <button class="f-key-btn" data-fkey="F4">F4</button>
+                </div>
+
+                <!-- Internal LCD Screen -->
+                <div class="atm-lcd-screen">
+                    
+                    <!-- Screen Top Header Status -->
+                    <div class="screen-header">
+                        <span class="screen-title">CYBER BANK SECURE TERMINAL</span>
+                        <span class="session-info" id="screen-session-status">ONLINE • 256-BIT ENCRYPTION</span>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 1: WELCOME / INSERT CARD
+                         ============================================== -->
+                    <div class="screen-view active" id="view-welcome">
+                        <h2 class="atm-heading" data-i18n="welcomeTitle">WELCOME TO ATM</h2>
+                        <p class="atm-subheading" data-i18n="welcomeSub">Please insert your ATM Card or Enter Card / Account Number to begin</p>
+
+                        <div class="screen-input-group">
+                            <label class="screen-label" data-i18n="cardPlaceholder">Card Number / Account Number</label>
+                            <input type="text" id="card-input" class="screen-input" placeholder="1234 5678 9012 3456" maxlength="20" autofocus autocomplete="off">
+                        </div>
+
+                        <div class="screen-actions">
+                            <button class="screen-btn screen-btn-primary" onclick="atm.submitCard()">
+                                <span data-i18n="enterBtn">ENTER</span> ➔
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 2: SELECT LANGUAGE
+                         ============================================== -->
+                    <div class="screen-view" id="view-language">
+                        <h2 class="atm-heading" data-i18n="selectLanguage">PLEASE SELECT YOUR LANGUAGE</h2>
+                        <p class="atm-subheading">Choose your preferred transaction language</p>
+
+                        <div class="menu-options-grid">
+                            <button class="menu-option-btn" onclick="atm.selectLang('en')">
+                                <span>1. ENGLISH</span> ➔
+                            </button>
+                            <button class="menu-option-btn btn-right" onclick="atm.selectLang('ta')">
+                                <span>2. தமிழ் (TAMIL)</span> ➔
+                            </button>
+                            <button class="menu-option-btn" onclick="atm.selectLang('hi')">
+                                <span>3. हिंदी (HINDI)</span> ➔
+                            </button>
+                            <button class="menu-option-btn btn-right" style="border-color: #ef4444; color: #ef4444;" onclick="atm.cancelTransaction()">
+                                <span data-i18n="cancelBtn">CANCEL</span> ✕
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 3: ENTER 4-DIGIT PIN
+                         ============================================== -->
+                    <div class="screen-view" id="view-pin">
+                        <h2 class="atm-heading" data-i18n="enterPinTitle">ENTER YOUR 4-DIGIT SECRET PIN</h2>
+                        <p class="atm-subheading">
+                            Card: <span id="display-masked-card" style="color: #38bdf8; font-weight: 600;">**** ****</span> • <span style="color: #94a3b8;">Enter PIN to Continue</span>
+                        </p>
+
+                        <!-- PIN Dots Display -->
+                        <div class="pin-display-wrapper">
+                            <div class="pin-dot"></div>
+                            <div class="pin-dot"></div>
+                            <div class="pin-dot"></div>
+                            <div class="pin-dot"></div>
+                        </div>
+
+                        <p style="font-size: 11px; color: #64748b; text-align: center; margin-bottom: 20px;" data-i18n="pinInstruction">
+                            Use the metallic keypad below or keyboard to enter your PIN. Never share your PIN.
+                        </p>
+
+                        <div class="screen-actions">
+                            <button class="screen-btn screen-btn-secondary" onclick="atm.handleKeypadInput('CLEAR')" data-i18n="clearBtn">CLEAR</button>
+                            <button class="screen-btn screen-btn-danger" onclick="atm.cancelTransaction()" data-i18n="cancelBtn">CANCEL</button>
+                            <button class="screen-btn screen-btn-primary" onclick="atm.submitPin()" data-i18n="enterBtn">ENTER</button>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 4: SELECT ACCOUNT TYPE
+                         ============================================== -->
+                    <div class="screen-view" id="view-acctype">
+                        <div class="user-greeting-pill" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.25), rgba(59, 130, 246, 0.15)); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 10px; padding: 10px 16px; margin-bottom: 14px; text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);">
+                            <span style="font-size: 16px; font-weight: 700; color: #38bdf8;" class="welcome-user-greeting">👋 <span class="greeting-prefix">Welcome</span>, <span class="auth-customer-name">Customer</span>!</span>
+                        </div>
+                        <h2 class="atm-heading" data-i18n="accTypeTitle">SELECT ACCOUNT TYPE</h2>
+                        <p class="atm-subheading">Please choose your account type for this session</p>
+
+                        <div class="menu-options-grid">
+                            <button class="menu-option-btn" onclick="atm.selectAccountType('Savings')">
+                                <span data-i18n="savingsAcc">SAVINGS ACCOUNT</span> ➔
+                            </button>
+                            <button class="menu-option-btn btn-right" onclick="atm.selectAccountType('Current')">
+                                <span data-i18n="currentAcc">CURRENT ACCOUNT</span> ➔
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 5: ATM MAIN MENU
+                         ============================================== -->
+                    <div class="screen-view" id="view-menu">
+                        <div class="user-greeting-pill" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.2), rgba(59, 130, 246, 0.1)); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 8px 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 14px; font-weight: 700; color: #38bdf8;" class="welcome-user-greeting">👋 <span class="greeting-prefix">Welcome</span>, <span class="auth-customer-name">Customer</span>!</span>
+                            <span style="font-size: 12px; color: #94a3b8;" id="auth-customer-acc"></span>
+                        </div>
+                        <h2 class="atm-heading" style="font-size: 16px; margin-bottom: 12px;" data-i18n="mainMenuTitle">PLEASE SELECT YOUR TRANSACTION</h2>
+
+                        <div class="menu-options-grid">
+                            <button class="menu-option-btn" onclick="atm.openFastCash()">
+                                <span data-i18n="fastCash">⚡ FAST CASH</span> ➔
+                            </button>
+                            <button class="menu-option-btn btn-right" onclick="atm.openWithdraw()">
+                                <span data-i18n="withdrawal">💵 CASH WITHDRAWAL</span> ➔
+                            </button>
+                            <button class="menu-option-btn" onclick="atm.openDeposit()">
+                                <span data-i18n="deposit">📥 CASH DEPOSIT</span> ➔
+                            </button>
+                            <button class="menu-option-btn btn-right" onclick="atm.openBalance()">
+                                <span data-i18n="balanceEnquiry">📊 BALANCE ENQUIRY</span> ➔
+                            </button>
+                            <button class="menu-option-btn" onclick="atm.openMiniStatement()">
+                                <span data-i18n="miniStatement">📜 MINI STATEMENT</span> ➔
+                            </button>
+                            <button class="menu-option-btn btn-right" onclick="atm.openTransfer()">
+                                <span data-i18n="transfer">🔄 FUND TRANSFER</span> ➔
+                            </button>
+                            <button class="menu-option-btn" onclick="atm.openPinChange()">
+                                <span data-i18n="pinChange">🔑 PIN CHANGE</span> ➔
+                            </button>
+                            <button class="menu-option-btn btn-right" style="border-color: #ef4444; color: #ef4444;" onclick="atm.cancelTransaction()">
+                                <span data-i18n="exitCard">🚪 EXIT / EJECT CARD</span> ✕
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 6: FAST CASH
+                         ============================================== -->
+                    <div class="screen-view" id="view-fastcash">
+                        <h2 class="atm-heading" data-i18n="fastCashTitle">SELECT FAST CASH AMOUNT</h2>
+                        <p class="atm-subheading">Quick one-touch withdrawal</p>
+
+                        <div class="menu-options-grid">
+                            <button class="menu-option-btn" onclick="atm.withdrawFastCash(500)">
+                                <span>₹ 500</span> ➔
+                            </button>
+                            <button class="menu-option-btn btn-right" onclick="atm.withdrawFastCash(1000)">
+                                <span>₹ 1,000</span> ➔
+                            </button>
+                            <button class="menu-option-btn" onclick="atm.withdrawFastCash(2000)">
+                                <span>₹ 2,000</span> ➔
+                            </button>
+                            <button class="menu-option-btn btn-right" onclick="atm.withdrawFastCash(5000)">
+                                <span>₹ 5,000</span> ➔
+                            </button>
+                            <button class="menu-option-btn" onclick="atm.withdrawFastCash(10000)">
+                                <span>₹ 10,000</span> ➔
+                            </button>
+                            <button class="menu-option-btn btn-right" style="border-color: #38bdf8;" onclick="atm.openWithdraw()">
+                                <span data-i18n="customAmount">OTHER AMOUNT</span> ➔
+                            </button>
+                        </div>
+
+                        <div class="screen-actions" style="margin-top: 15px;">
+                            <button class="screen-btn screen-btn-secondary" onclick="atm.switchView('view-menu')" data-i18n="backToMenu">BACK TO MENU</button>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 7: CASH WITHDRAWAL (CUSTOM AMOUNT)
+                         ============================================== -->
+                    <div class="screen-view" id="view-withdraw">
+                        <h2 class="atm-heading" data-i18n="withdrawTitle">CASH WITHDRAWAL</h2>
+                        <p class="atm-subheading" data-i18n="withdrawPrompt">Enter amount in multiples of ₹100 / ₹500 (Max: ₹25,000)</p>
+
+                        <div class="screen-input-group">
+                            <label class="screen-label">Amount (₹)</label>
+                            <input type="number" id="withdraw-amount-input" class="screen-input" placeholder="₹0000" step="100" min="100" max="25000">
+                        </div>
+
+                        <div class="screen-actions">
+                            <button class="screen-btn screen-btn-secondary" onclick="atm.switchView('view-menu')" data-i18n="backToMenu">BACK</button>
+                            <button class="screen-btn screen-btn-primary" onclick="atm.submitCustomWithdrawal()">
+                                <span data-i18n="enterBtn">WITHDRAW CASH</span> ➔
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 8: CASH DEPOSIT (CDM)
+                         ============================================== -->
+                    <div class="screen-view" id="view-deposit">
+                        <h2 class="atm-heading" data-i18n="depositTitle">CASH DEPOSIT MACHINE (CDM)</h2>
+                        <p class="atm-subheading" data-i18n="depositPrompt">Please enter count of currency notes inserted:</p>
+
+                        <div class="deposit-box">
+                            <div class="denom-row">
+                                <span>₹500 Notes (₹500 x )</span>
+                                <input type="number" id="deposit-500" class="denom-input" value="0" min="0" max="200" oninput="atm.calculateDepositTotal()">
+                            </div>
+                            <div class="denom-row">
+                                <span>₹200 Notes (₹200 x )</span>
+                                <input type="number" id="deposit-200" class="denom-input" value="0" min="0" max="200" oninput="atm.calculateDepositTotal()">
+                            </div>
+                            <div class="denom-row">
+                                <span>₹100 Notes (₹100 x )</span>
+                                <input type="number" id="deposit-100" class="denom-input" value="0" min="0" max="200" oninput="atm.calculateDepositTotal()">
+                            </div>
+                            <div class="deposit-total-badge">
+                                <span data-i18n="totalDeposit">Total Deposit Amount:</span>
+                                <span id="deposit-total-display">₹0</span>
+                            </div>
+                        </div>
+
+                        <div class="screen-actions">
+                            <button class="screen-btn screen-btn-secondary" onclick="atm.switchView('view-menu')" data-i18n="backToMenu">BACK</button>
+                            <button class="screen-btn screen-btn-primary" onclick="atm.submitDeposit()">
+                                <span data-i18n="confirmDeposit">CONFIRM DEPOSIT</span> ➔
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 9: BALANCE ENQUIRY
+                         ============================================== -->
+                    <div class="screen-view" id="view-balance">
+                        <h2 class="atm-heading" data-i18n="balanceTitle">ACCOUNT BALANCE ENQUIRY</h2>
+
+                        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #1e3a5f; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                            <div class="receipt-row" style="margin-bottom: 8px;">
+                                <span style="color: #94a3b8;" data-i18n="accHolder">Account Holder:</span>
+                                <strong id="bal-holder" style="color: #fff;">Customer</strong>
+                            </div>
+                            <div class="receipt-row" style="margin-bottom: 8px;">
+                                <span style="color: #94a3b8;" data-i18n="accNumber">Account Number:</span>
+                                <span id="bal-accnum" style="color: #38bdf8; font-family: var(--font-mono);">1001202401</span>
+                            </div>
+                            <div class="receipt-row" style="margin-bottom: 8px;">
+                                <span style="color: #94a3b8;" data-i18n="cardNo">Card Number:</span>
+                                <span id="bal-card" style="color: #94a3b8; font-family: var(--font-mono);">**** 6789</span>
+                            </div>
+                            <div class="receipt-row" style="margin-bottom: 14px;">
+                                <span style="color: #94a3b8;" data-i18n="accType">Account Type:</span>
+                                <span id="bal-type" style="color: #fff;">Savings Account</span>
+                            </div>
+                            <div style="border-top: 1px dashed #334155; padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 15px; font-weight: 700; color: #34d399;" data-i18n="availBal">AVAILABLE BALANCE:</span>
+                                <span id="bal-amount" style="font-size: 24px; font-weight: 900; color: #22c55e; font-family: var(--font-mono);">₹00,000</span>
+                            </div>
+                        </div>
+
+                        <div class="screen-actions">
+                            <button class="screen-btn screen-btn-secondary" onclick="atm.switchView('view-menu')" data-i18n="backToMenu">MAIN MENU</button>
+                            <button class="screen-btn screen-btn-primary" onclick="atm.displayReceipt(atm.currentReceiptData)" data-i18n="printReceipt">🖨️ PRINT RECEIPT</button>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 10: MINI STATEMENT
+                         ============================================== -->
+                    <div class="screen-view" id="view-statement">
+                        <h2 class="atm-heading" data-i18n="miniStatement">MINI STATEMENT</h2>
+                        <p class="atm-subheading">Recent transactions history for this account</p>
+
+                        <div class="statement-container">
+                            <table class="statement-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Amount (₹)</th>
+                                        <th>Balance (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="statement-rows">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="screen-actions">
+                            <button class="screen-btn screen-btn-secondary" onclick="atm.switchView('view-menu')" data-i18n="backToMenu">BACK</button>
+                            <button class="screen-btn screen-btn-primary" onclick="atm.displayReceipt(atm.currentReceiptData)" data-i18n="printReceipt">🖨️ PRINT SLIP</button>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 11: FUND TRANSFER
+                         ============================================== -->
+                    <div class="screen-view" id="view-transfer">
+                        <h2 class="atm-heading" data-i18n="transferTitle">FUND TRANSFER</h2>
+                        <p class="atm-subheading">Transfer money securely to any account</p>
+
+                        <div class="screen-input-group">
+                            <label class="screen-label" data-i18n="beneficiaryAcc">Beneficiary Account / Card Number</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="transfer-acc-input" class="screen-input" placeholder="Target Account No" style="font-size: 15px;">
+                                <button class="screen-btn screen-btn-primary" style="flex: 0 0 100px; font-size: 11px;" onclick="atm.checkBeneficiary()" data-i18n="verifyBen">VERIFY</button>
+                            </div>
+                        </div>
+
+                        <!-- Beneficiary Info Card -->
+                        <div id="transfer-beneficiary-info" style="display: none; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 13px;">
+                            <div>Recipient Name: <strong id="ben-name-display" style="color: #34d399;">Name</strong></div>
+                            <div>Account: <span id="ben-acc-display" style="color: #bae6fd;">1001202402</span></div>
+                        </div>
+
+                        <div id="transfer-step-2" style="display: none;">
+                            <div class="screen-input-group">
+                                <label class="screen-label" data-i18n="transferAmt">Transfer Amount (₹)</label>
+                                <input type="number" id="transfer-amt-input" class="screen-input" placeholder="₹0000" min="100">
+                            </div>
+                        </div>
+
+                        <div class="screen-actions">
+                            <button class="screen-btn screen-btn-secondary" onclick="atm.switchView('view-menu')" data-i18n="backToMenu">BACK</button>
+                            <button class="screen-btn screen-btn-primary" onclick="atm.submitFundTransfer()">
+                                <span data-i18n="confirmTransfer">CONFIRM TRANSFER</span> ➔
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 12: PIN CHANGE
+                         ============================================== -->
+                    <div class="screen-view" id="view-pinchange">
+                        <h2 class="atm-heading" data-i18n="pinChangeTitle">CHANGE ATM PIN</h2>
+                        <p class="atm-subheading">Update your 4-digit secret ATM PIN</p>
+
+                        <div class="screen-input-group" style="margin-bottom: 10px;">
+                            <label class="screen-label" data-i18n="currentPin">Current PIN</label>
+                            <input type="password" id="old-pin-input" class="screen-input" maxlength="4" placeholder="••••">
+                        </div>
+
+                        <div class="screen-input-group" style="margin-bottom: 10px;">
+                            <label class="screen-label" data-i18n="newPin">New 4-Digit PIN</label>
+                            <input type="password" id="new-pin-input" class="screen-input" maxlength="4" placeholder="••••">
+                        </div>
+
+                        <div class="screen-input-group" style="margin-bottom: 15px;">
+                            <label class="screen-label" data-i18n="confirmNewPin">Confirm New PIN</label>
+                            <input type="password" id="confirm-pin-input" class="screen-input" maxlength="4" placeholder="••••">
+                        </div>
+
+                        <div class="screen-actions">
+                            <button class="screen-btn screen-btn-secondary" onclick="atm.switchView('view-menu')" data-i18n="backToMenu">BACK</button>
+                            <button class="screen-btn screen-btn-primary" onclick="atm.submitPinChange()">
+                                <span data-i18n="updatePinBtn">UPDATE PIN</span> ➔
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 13: PROCESSING SPINNER
+                         ============================================== -->
+                    <div class="screen-view" id="view-processing" style="text-align: center;">
+                        <div class="atm-loader"></div>
+                        <h2 class="atm-heading" data-i18n="processingTitle">PROCESSING TRANSACTION</h2>
+                        <p class="atm-subheading" data-i18n="processingSub">Please do not remove your card or leave the terminal...</p>
+                    </div>
+
+                    <!-- ==============================================
+                         VIEW 14: SUCCESS CASH DISPENSE
+                         ============================================== -->
+                    <div class="screen-view" id="view-success-cash" style="text-align: center;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">💵</div>
+                        <h2 class="atm-heading" style="color: #34d399;" data-i18n="successWithdrawTitle">PLEASE COLLECT YOUR CASH</h2>
+                        <p class="atm-subheading" data-i18n="successWithdrawSub">Cash has been dispensed from the cash slot below.</p>
+                        
+                        <div class="screen-actions" style="max-width: 250px; margin: 20px auto 0 auto;">
+                            <button class="screen-btn screen-btn-primary" onclick="atm.collectCash()">
+                                <span>COLLECT CASH</span> ➔
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Function Keys (F5 - F8) -->
+                <div class="side-buttons-col">
+                    <button class="f-key-btn" data-fkey="F5">F5</button>
+                    <button class="f-key-btn" data-fkey="F6">F6</button>
+                    <button class="f-key-btn" data-fkey="F7">F7</button>
+                    <button class="f-key-btn" data-fkey="F8">F8</button>
+                </div>
+            </div>
+
+            <!-- ==============================================
+                 🏧 HARDWARE SLOTS & 3D TACTILE KEYPAD
+                 ============================================== -->
+            <div class="hardware-col">
+                
+                <!-- 1. Card Reader Slot & Virtual Card -->
+                <div class="hw-slot-panel">
+                    <div class="hw-slot-header">
+                        <span class="hw-slot-title">CARD INSERTION SLOT</span>
+                        <div class="slot-led"></div>
+                    </div>
+                    <div class="card-reader-slot">
+                        <div class="card-glowing-light"></div>
+                    </div>
+                    <!-- Clickable Simulated Card Preview -->
+                    <div class="virtual-card-preview" id="virtual-card" onclick="atm.submitCard()">
+                        <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #38bdf8;">BANK OF TAMIL NADU</div>
+                        <div style="font-size: 14px; letter-spacing: 2px; margin: 8px 0; font-family: var(--font-mono);">4532 •••• •••• 6789</div>
+                        <div style="display: flex; justify-content: space-between; font-size: 10px; color: #cbd5e1;">
+                            <span>TAP TO INSERT CARD</span>
+                            <span>DEBIT EMV</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Cash Dispenser Slot -->
+                <div class="hw-slot-panel cash-dispenser-panel">
+                    <div class="hw-slot-header">
+                        <span class="hw-slot-title">CASH DISPENSER</span>
+                        <div class="slot-led" style="background: var(--led-green); box-shadow: 0 0 8px var(--led-green);"></div>
+                    </div>
+                    <div class="dispenser-bezel">
+                        <div class="dispenser-shutter" id="dispenser-shutter"></div>
+                    </div>
+                    <div class="dispensed-cash-tray">
+                        <div class="cash-note-stack" id="cash-notes-stack" onclick="atm.collectCash()">
+                            <span>💸 CLICK TO TAKE CASH: <strong id="dispensed-cash-text">₹0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Receipt Slot -->
+                <div class="hw-slot-panel">
+                    <div class="hw-slot-header">
+                        <span class="hw-slot-title">RECEIPT PRINTER</span>
+                    </div>
+                    <div class="receipt-bezel"></div>
+                </div>
+
+                <!-- 4. Tactile 3D Metallic PIN Keypad -->
+                <div class="tactile-keypad">
+                    <div class="keypad-grid">
+                        <button class="atm-key" data-key="1">1</button>
+                        <button class="atm-key" data-key="2">2</button>
+                        <button class="atm-key" data-key="3">3</button>
+                        <button class="atm-key key-cancel" data-key="CANCEL" data-i18n="cancelBtn">CANCEL</button>
+
+                        <button class="atm-key" data-key="4">4</button>
+                        <button class="atm-key" data-key="5">5</button>
+                        <button class="atm-key" data-key="6">6</button>
+                        <button class="atm-key key-clear" data-key="CLEAR" data-i18n="clearBtn">CLEAR</button>
+
+                        <button class="atm-key" data-key="7">7</button>
+                        <button class="atm-key" data-key="8">8</button>
+                        <button class="atm-key" data-key="9">9</button>
+                        <button class="atm-key key-enter" data-key="ENTER" data-i18n="enterBtn">ENTER</button>
+
+                        <button class="atm-key" data-key=".">.</button>
+                        <button class="atm-key" data-key="0">0</button>
+                        <button class="atm-key" data-key="00">00</button>
+                        <button class="atm-key" style="font-size: 11px; background: #475569;" onclick="atm.switchView('view-menu')">MENU</button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- ==============================================
+         🧾 THERMAL RECEIPT MODAL
+         ============================================== -->
+    <div class="receipt-modal-overlay" id="receipt-modal">
+        <div class="thermal-receipt-paper">
+            <div class="receipt-header">
+                <h3>BANK OF TAMIL NADU</h3>
+                <p>CHENNAI CENTRAL TERMINAL • ATM-TN-008</p>
+                <p id="rec-date">18/08/2026 14:40:00</p>
+            </div>
+            <div class="receipt-body">
+                <div class="receipt-row">
+                    <span>TXN ID:</span>
+                    <strong id="rec-txnid">TXN-001</strong>
+                </div>
+                <div class="receipt-row">
+                    <span>CARD NO:</span>
+                    <span id="rec-card">**** **** **** 6789</span>
+                </div>
+                <div class="receipt-row">
+                    <span>HOLDER:</span>
+                    <strong id="rec-holder">Girija Sundaram</strong>
+                </div>
+                <div class="receipt-row">
+                    <span>TXN TYPE:</span>
+                    <strong id="rec-type" style="color: #0284c7;">WITHDRAWAL</strong>
+                </div>
+                <div class="receipt-row">
+                    <span>AMOUNT:</span>
+                    <strong id="rec-amt" style="font-size: 14px;">₹2,000.00</strong>
+                </div>
+                <div class="receipt-row" style="margin-top: 6px; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
+                    <span>AVAIL BALANCE:</span>
+                    <strong id="rec-bal" style="font-size: 14px; color: #16a34a;">₹63,000.00</strong>
+                </div>
+            </div>
+            <div class="receipt-footer">
+                <p>THANK YOU FOR BANKING WITH US</p>
+                <p style="letter-spacing: 3px; margin-top: 4px;">||||| | |||| ||||| || |</p>
+            </div>
+            <div class="receipt-actions">
+                <button class="receipt-btn receipt-btn-print" onclick="atm.printReceipt()" data-i18n="printSlip">Print Receipt</button>
+                <button class="receipt-btn receipt-btn-close" onclick="atm.closeReceipt()" data-i18n="closeSlip">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/audio.js"></script>
+    <script src="/js/atm.js"></script>
+</body>
+</html>

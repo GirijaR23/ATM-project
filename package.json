@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "express.js": "^1.0.0",
+    "html2canvas": "^1.4.1",
+    "init": "^0.1.2",
+    "mongoose": "^9.8.0"
+  }
+}

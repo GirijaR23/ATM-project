@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Read User Data</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <h1>Read User Data</h1>
+            <div class="nav-links">
+                <a href="/add" class="nav-link secondary">Add Data</a>
+            </div>
+        </div>
+
+        <div id="data" class="card form-card"></div>
+    </div>
+
+    <script>
+        async function loadData() {
+            try {
+                const response = await fetch('/getdata');
+                const data = await response.json();
+                const container = document.getElementById('data');
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<p>No account data found.</p>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                data.forEach(item => {
+                    container.innerHTML += `
+                        <p>Account Number: ${item.accnum}</p>
+                        <p>PIN Number: ••••</p>
+                        <p>Balance: ₹${(item.accbls || 0).toLocaleString('en-IN')}</p>
+                        <button onclick="deleteData('${item._id}')" class="button secondary" style="background: #dc2626; color: white;">Delete</button>
+                        <button onclick="editData('${item._id}')" class="button primary" style="margin-left: 10px;">Update</button>
+                        <hr/>
+                    `;
+                });
+            } catch (error) {
+                console.error(error);
+                document.getElementById('data').innerHTML = '<p>Failed to load data.</p>';
+            }
+        }
+
+        loadData();
+
+        async function deleteData(id) {
+            if (confirm("Are you sure you want to delete this record?")) {
+                const response = await fetch(`/delete/${id}`, { method: 'DELETE' });
+                alert(await response.text());
+                location.reload();
+            }
+        }
+
+        function editData(id) {
+            window.location.href = `/edit?id=${id}`;
+        }
+    </script>
+</body>
+</html>
